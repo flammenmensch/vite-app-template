@@ -1,0 +1,90 @@
+{
+  "name": "@flammenmensch/vite-app-template",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Opinionated Vite + React + vanilla-extract application template with unit, browser and containerised visual regression testing.",
+  "keywords": [
+    "ladle",
+    "playwright",
+    "react",
+    "template",
+    "typescript",
+    "vanilla-extract",
+    "visual-regression",
+    "vite",
+    "vitest"
+  ],
+  "homepage": "https://github.com/flammenmensch/vite-app-template#readme",
+  "bugs": {
+    "url": "https://github.com/flammenmensch/vite-app-template/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Alexey Protasov",
+    "url": "https://github.com/flammenmensch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flammenmensch/vite-app-template.git"
+  },
+  "type": "module",
+  "imports": {
+    "#test/*": "./src/test/*"
+  },
+  "scripts": {
+    "start": "vite",
+    "start:ladle": "ladle serve",
+    "build": "tsc -b && vite build",
+    "build:ladle": "ladle build",
+    "preview": "vite preview",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "lint": "oxlint",
+    "prepare": "husky",
+    "init": "node scripts/init.mjs",
+    "test": "vitest --project=unit --project=browser",
+    "test:run": "vitest run --project=unit --project=browser",
+    "test:unit": "vitest --project=unit",
+    "test:browser": "vitest --project=browser",
+    "test:coverage": "vitest run --project=unit --project=browser --coverage",
+    "test:visual": "docker compose run --rm --build visual",
+    "test:visual:update": "docker compose run --rm --build visual pnpm exec vitest run --project=visual --update",
+    "test:visual:shell": "docker compose run --rm --build --entrypoint bash visual",
+    "test:all": "pnpm test:run && pnpm test:visual"
+  },
+  "dependencies": {
+    "@vanilla-extract/css": "^1.21.2",
+    "clsx": "^2.1.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@ladle/react": "^5.1.1",
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@types/babel__core": "^7.20.5",
+    "@types/node": "^26.4.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vanilla-extract/vite-plugin": "^5.2.6",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/browser-playwright": "^5.0.0",
+    "@vitest/coverage-v8": "5.0.0",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.4.1",
+    "oxfmt": "^0.66.0",
+    "oxlint": "^1.81.0",
+    "playwright": "^1.62.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0",
+    "vitest-browser-react": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

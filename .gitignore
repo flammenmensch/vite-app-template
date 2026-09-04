@@ -1,0 +1,33 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+# A project-local pnpm store, if one gets created here.
+.pnpm-store
+dist
+dist-ssr
+*.local
+# Ladle's production build output.
+build
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vitest. Failure screenshots and visual diffs land under .vitest/attachments.
+# Visual baselines are NOT ignored: __screenshots__/ is committed on purpose,
+# because the baseline is the assertion.
+.vitest/

@@ -1,0 +1,63 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [".claude"],
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": false,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "es5",
+  "sortPackageJson": true,
+  "sortImports": {
+    "newlinesBetween": true,
+    "sortSideEffects": false,
+    "customGroups": [
+      {
+        "groupName": "side-effect",
+        "modifiers": ["side_effect"]
+      },
+      {
+        "groupName": "react",
+        "elementNamePattern": [
+          "react",
+          "react-dom",
+          "react/**",
+          "react-dom/**"
+        ],
+        "modifiers": ["value"]
+      },
+      {
+        "groupName": "react-type",
+        "elementNamePattern": [
+          "react",
+          "react-dom",
+          "react/**",
+          "react-dom/**"
+        ],
+        "modifiers": ["type"]
+      },
+      {
+        "groupName": "scoped",
+        "selector": "external",
+        "elementNamePattern": ["@*/**"],
+        "modifiers": ["value"]
+      },
+      {
+        "groupName": "scoped-type",
+        "selector": "external",
+        "elementNamePattern": ["@*/**"],
+        "modifiers": ["type"]
+      }
+    ],
+    "groups": [
+      ["side_effect", "side_effect_style", "side-effect"],
+      ["react", "react-type"],
+      ["scoped", "scoped-type"],
+      ["builtin", "external"],
+      ["internal", "subpath", "parent", "sibling", "index"],
+      "style",
+      "unknown"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+# Transitive dependencies allowed to run install scripts: esbuild and
+# @swc/core arrive via Vite and Ladle, msw via @vitest/browser.
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  msw: true
+
+# Reject dependency versions published less than 24h ago.
+#
+# This is pnpm 11's default, restated explicitly so the project's supply-chain
+# posture is a recorded decision rather than an inherited default that a future
+# pnpm release could change. It is the main defence against a compromised
+# maintainer account: malicious releases are typically caught and unpublished
+# within hours, so simply not being first to install is most of the protection.
+#
+# There is deliberately no `minimumReleaseAgeExclude` list. pnpm offers to add
+# one whenever an install is blocked, and accepting turns the policy off for
+# exactly the package it just flagged -- which is precisely the package it was
+# protecting you from. If an install is blocked, wait it out.
+minimumReleaseAge: 1440

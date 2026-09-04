@@ -1,0 +1,29 @@
+# Records visual baselines on amd64 and uploads them for review.
+#
+# Needed because baselines are architecture-specific and not every contributor
+# can produce amd64 ones locally -- emulating amd64 on an Apple Silicon host is
+# slow, and unreliable under some VM backends. Run this workflow, download the
+# artifact, commit the PNGs.
+name: Record visual baselines
+
+on:
+  workflow_dispatch:
+
+# Least privilege: nothing here writes to the repository or publishes.
+permissions:
+  contents: read
+
+jobs:
+  record:
+    name: Record on linux/amd64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Record baselines
+        run: docker compose run --rm --build visual pnpm exec vitest run --project=visual --update
+      - name: Upload baselines
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-baselines
+          path: src/**/__screenshots__/**
+          retention-days: 14

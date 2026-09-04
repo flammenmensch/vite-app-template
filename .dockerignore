@@ -1,0 +1,14 @@
+# The build context only needs the manifests -- source arrives at runtime via
+# the bind mount in compose.yaml. Everything below is either huge, host-specific,
+# or both.
+node_modules
+dist
+dist-ssr
+build
+.git
+.github
+.husky
+.vitest
+**/__screenshots__
+*.log
+.DS_Store

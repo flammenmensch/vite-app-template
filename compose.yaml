@@ -1,0 +1,37 @@
+# Visual regression runs here and nowhere else, so that a screenshot baseline
+# means "this is what the component looks like" rather than "this is what the
+# component looks like on the machine that happened to record it".
+services:
+  visual:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Defaults to amd64 because that is what standard GitHub Actions runners
+    # are, so CI and a committed baseline always agree.
+    #
+    # Overridable because emulating amd64 on an arm64 host is slow and, under
+    # some VM backends (Colima's QEMU), unreliable -- pnpm's threaded I/O trips
+    # a libuv assertion there. Contributors on Apple Silicon can run
+    # `VISUAL_PLATFORM=linux/arm64 pnpm test:visual` natively; baselines carry
+    # `process.arch` in their filename, so the two sets never compare against
+    # each other by accident.
+    platform: ${VISUAL_PLATFORM:-linux/amd64}
+    working_dir: /app
+    # Chromium's default 64MB /dev/shm is not enough for a real page; without
+    # this the browser dies mid-run with an opaque crash.
+    shm_size: 1gb
+    # Reaps zombie Chromium processes. Without an init, a killed run can leave
+    # the container hanging.
+    init: true
+    volumes:
+      - .:/app
+      # Host node_modules is darwin-arm64. oxlint, rolldown and esbuild all ship
+      # native binaries, so the container must never see them -- this named
+      # volume masks the bind mount with a linux/amd64 install.
+      - visual-node-modules:/app/node_modules
+      # Survives `--build`, so reinstalls are near-instant.
+      - visual-pnpm-store:/pnpm/store
+
+volumes:
+  visual-node-modules:
+  visual-pnpm-store:
