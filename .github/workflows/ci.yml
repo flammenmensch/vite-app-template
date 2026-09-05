@@ -105,3 +105,74 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm build:ladle
+
+  scaffold:
+    name: Scaffold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Keep the job token out of .git/config, where any later step --
+          # a dependency's install script included -- could read it.
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Every other job tests this repository. This one tests what people
+      # actually receive: `git archive` reproduces exactly what degit copies,
+      # tracked files with no repository attached. Both scaffolds live outside
+      # the workspace because git walks upwards to find `.git`, and a scaffold
+      # nested in this checkout would find the one belonging to the template.
+      - name: Build two scaffolds from the tracked tree
+        run: |
+          for name in skip-init my-app; do
+            mkdir -p "$RUNNER_TEMP/$name"
+            git archive HEAD | tar -x -C "$RUNNER_TEMP/$name"
+          done
+
+      # husky prints ".git can't be found" when it runs before a repository
+      # exists, which is the normal state of a fresh scaffold, and
+      # scripts/prepare.mjs stays quiet instead. pnpm keeps the install itself
+      # green either way, so the log is the only place that failure shows.
+      - name: First install stays quiet without a repository
+        working-directory: ${{ runner.temp }}/skip-init
+        run: |
+          set -o pipefail
+          pnpm install --frozen-lockfile 2>&1 | tee install.log
+          ! grep -qi "can't be found" install.log
+          test ! -d .husky/_
+
+      # What README tells anyone who skips `init`. A second `pnpm install`
+      # cannot stand in for this: pnpm skips lifecycle scripts entirely when
+      # the install is already up to date, so `prepare` would never re-run.
+      - name: git init and pnpm run prepare install the hooks
+        working-directory: ${{ runner.temp }}/skip-init
+        run: |
+          git init --quiet
+          pnpm run prepare
+          test "$(git config --get core.hooksPath)" = '.husky/_'
+
+      # The supported path. Answers arrive on stdin because a workflow has no
+      # terminal to type them into, and every one of them is blank: `ask` falls
+      # back to its default for any question the pipe does not answer, so the
+      # surplus lines keep this working if `init` ever grows another prompt.
+      # The name then defaults to the directory, which is why it is my-app.
+      - name: pnpm run init finishes setup on a fresh scaffold
+        working-directory: ${{ runner.temp }}/my-app
+        run: |
+          pnpm install --frozen-lockfile
+          printf '\n\n\n\n\n\n' | pnpm run init
+          test "$(git config --get core.hooksPath)" = '.husky/_'
+          test ! -e scripts
+          node --eval '
+            const pkg = require("./package.json")
+            const wrong = []
+            if (pkg.name !== "my-app") wrong.push(`name is ${pkg.name}`)
+            if (pkg.scripts.prepare !== "husky") wrong.push("prepare still guarded")
+            if (pkg.scripts.init) wrong.push("init survived")
+            if (pkg.scripts.postinstall) wrong.push("postinstall survived")
+            if (wrong.length) { console.error(wrong.join("; ")); process.exit(1) }
+          '

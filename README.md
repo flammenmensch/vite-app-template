@@ -52,7 +52,8 @@ components, record your own baselines with `pnpm test:visual:update`.
 to happen here rather than during `pnpm install`, because husky needs `.git` to
 already exist, and a `degit` scaffold has no repository yet. Skipping `init`
 therefore leaves you without lint-staged and commitlint — run `git init` and
-then `pnpm install` again to pick them up.
+then `pnpm run prepare` to pick them up. A second `pnpm install` will not do it:
+pnpm skips lifecycle scripts when the install is already up to date.
 
 `init` rewrites `package.json`, the `index.html` title, and this README. The
 visual baselines it leaves behind belong to the template's `Header`, so

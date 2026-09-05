@@ -5,8 +5,9 @@
  * Running `husky` directly prints ".git can't be found" during the very first
  * `pnpm install` of a degit scaffold, which reads like a broken template -- the
  * directory has no repository yet by construction. Staying quiet until there is
- * one keeps that install clean, and makes a later `git init && pnpm install`
- * install the hooks instead of skipping them.
+ * one keeps that install clean, and leaves `pnpm run prepare` to install the
+ * hooks once `git init` has run. A second `pnpm install` will not do it: pnpm
+ * skips lifecycle scripts entirely when the install is already up to date.
  *
  * `init` rewrites this script back to plain `husky` when it deletes scripts/,
  * so a finished project keeps installing hooks for whoever clones it.
