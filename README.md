@@ -108,14 +108,16 @@ src/
       __screenshots__/            committed baselines
       index.ts                    barrel
   styles/                         reset + global theme
-  test/                           shared test setup and helpers
   utils/
+test/                             shared test setup and helpers
 ```
 
-Test helpers live in `src/test/` and are imported as `#test/...` through the
-`imports` field in `package.json` (mirrored by `paths` in `tsconfig.app.json`,
-which TypeScript needs spelled out separately). Test _files_ stay next to the
-code they cover.
+Test helpers live in `test/` at the repo root, outside `src`, and are imported
+as `#test/...` through the `imports` field in `package.json` (mirrored by `paths`
+in `tsconfig.app.json`, which TypeScript needs spelled out separately). They sit
+outside `src` because they ship with the harness rather than the application —
+which also keeps them out of the coverage report without an exclude rule. Test
+_files_ stay next to the code they cover.
 
 ## Styling
 
@@ -352,7 +354,7 @@ visualTest('menu open', stories.Default, {
 })
 ```
 
-`src/test/setup.visual.ts` additionally freezes animations, transitions, and the
+`test/setup.visual.ts` additionally freezes animations, transitions, and the
 text caret for every visual test.
 
 A first run with no baseline **fails** and writes the reference. That is

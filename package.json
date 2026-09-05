@@ -29,7 +29,7 @@
   },
   "type": "module",
   "imports": {
-    "#test/*": "./src/test/*"
+    "#test/*": "./test/*"
   },
   "scripts": {
     "start": "vite",

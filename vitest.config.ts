@@ -109,7 +109,6 @@ export default defineConfig({
       exclude: [
         'src/**/*.css.ts',
         'src/**/*.stories.tsx',
-        'src/test/**',
         'src/**/index.ts',
         'src/main.tsx',
       ],
@@ -134,7 +133,7 @@ export default defineConfig({
         test: {
           name: 'browser',
           include: ['src/**/*.browser.test.{ts,tsx}'],
-          setupFiles: ['./src/test/setup.browser.ts'],
+          setupFiles: ['./test/setup.browser.ts'],
           browser: chromium('browser'),
         },
       }),
@@ -143,10 +142,7 @@ export default defineConfig({
         test: {
           name: 'visual',
           include: ['src/**/*.visual.test.{ts,tsx}'],
-          setupFiles: [
-            './src/test/setup.browser.ts',
-            './src/test/setup.visual.ts',
-          ],
+          setupFiles: ['./test/setup.browser.ts', './test/setup.visual.ts'],
           browser: {
             ...chromium('visual'),
             expect: { toMatchScreenshot: screenshotComparison },

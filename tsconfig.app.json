@@ -14,7 +14,7 @@
      * Mirrors the `imports` field in package.json. Vite resolves `#test/*`
      * from package.json directly; TypeScript needs it spelled out here too.
      */
-    "paths": { "#test/*": ["./src/test/*"] },
+    "paths": { "#test/*": ["./test/*"] },
     "allowImportingTsExtensions": false,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
@@ -30,5 +30,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }
