@@ -82,6 +82,24 @@ export const globalTheme = createGlobalTheme(':root', {
     /** Detached from it: dialogs, sheets. */
     lg: '0 12px 32px rgba(0, 0, 0, 0.12)',
   },
+  duration: {
+    /** State changes on something already visible: hover, focus, checked. */
+    fast: '120ms',
+    /** The default for most transitions. */
+    normal: '200ms',
+    /** Something entering or leaving: dialogs, sheets, toasts. */
+    slow: '320ms',
+  },
+  /**
+   * Asymmetric on purpose. Things arriving should decelerate into place and
+   * things leaving should accelerate away; using one symmetric curve for both
+   * is what makes an interface feel sluggish on exit.
+   */
+  easing: {
+    standard: 'cubic-bezier(0.2, 0, 0, 1)',
+    entrance: 'cubic-bezier(0, 0, 0, 1)',
+    exit: 'cubic-bezier(0.3, 0, 1, 1)',
+  },
 })
 
 globalStyle('html', {
@@ -123,6 +141,32 @@ globalStyle(':focus-visible', {
     [global]: {
       outline: `2px solid ${globalTheme.color.focus}`,
       outlineOffset: '2px',
+    },
+  },
+})
+
+/**
+ * Honour `prefers-reduced-motion` once, here, by collapsing the duration
+ * tokens themselves. Every component that animates through them follows
+ * automatically -- no media query per component, and no `!important` blanket
+ * over the whole document.
+ *
+ * This is also the argument for motion being tokens rather than literals: a
+ * hardcoded `200ms` cannot be turned off from one place.
+ *
+ * Deliberately NOT in the `global` layer. `createGlobalTheme` writes its
+ * `:root` unlayered, and unlayered rules beat layered ones no matter where they
+ * sit in the file -- inside the layer this block compiled fine, emitted real
+ * CSS, and was silently ignored by the browser.
+ */
+globalStyle(':root', {
+  '@media': {
+    '(prefers-reduced-motion: reduce)': {
+      vars: {
+        [globalTheme.duration.fast]: '1ms',
+        [globalTheme.duration.normal]: '1ms',
+        [globalTheme.duration.slow]: '1ms',
+      },
     },
   },
 })
