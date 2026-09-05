@@ -8,9 +8,9 @@
  * place to say what to do next.
  */
 import { execFileSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { closeSync, existsSync, openSync, writeSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { env } from 'node:process'
+import { env, platform } from 'node:process'
 
 const root = resolve(import.meta.dirname, '..')
 
@@ -31,8 +31,35 @@ const isTemplateItself = () => {
   }
 }
 
+/**
+ * Write to the terminal rather than to stdout.
+ *
+ * pnpm's default reporter captures a lifecycle script's stdout and stderr,
+ * renders one rolling line while it runs, then collapses the box to "Done" --
+ * erasing everything the script printed. The controlling terminal is a separate
+ * channel the reporter never touches, so a message sent there survives. Falls
+ * back to stdout when no terminal is attached, which is also when pnpm switches
+ * to a reporter that prints captured output anyway.
+ */
+const printToTerminal = (text) => {
+  // Selected by platform, never probed: `openSync` with 'w' creates a missing
+  // file, so trying the wrong device would quietly write a file of that name.
+  const device = platform === 'win32' ? '\\\\.\\CONOUT$' : '/dev/tty'
+  try {
+    const fd = openSync(device, 'w')
+    try {
+      writeSync(fd, `${text}\n`)
+    } finally {
+      closeSync(fd)
+    }
+  } catch {
+    // No terminal attached (piped, or CI): pnpm shows captured output there.
+    console.log(text)
+  }
+}
+
 if (isFreshScaffold && !env.CI && !isTemplateItself()) {
-  console.log(
+  printToTerminal(
     [
       '',
       '  Almost there. Next steps:',
