@@ -1,0 +1,50 @@
+# Pinning without updating trades one risk for another, so this exists to keep
+# the pins from rotting.
+version: 2
+
+updates:
+  # Workflow actions are pinned to commit SHAs, so a moved tag cannot change
+  # what CI runs. Nothing else advances those SHAs -- without this they would
+  # silently freeze at whatever was current the day they were written.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      actions:
+        patterns:
+          - '*'
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Mirrors `minimumReleaseAge: 1440` in pnpm-workspace.yaml -- 1440 minutes
+    # is one day. Without this, Dependabot would propose versions that
+    # `pnpm install` then refuses to resolve, and every such PR would fail for a
+    # reason having nothing to do with its contents.
+    cooldown:
+      default-days: 1
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  # The Dockerfile's `FROM node:...` pins the environment every visual baseline
+  # was recorded in, so a bump here can legitimately change rendering. The
+  # visual job will fail the PR if it does; that failure is the signal to
+  # re-record baselines, not a flake.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
