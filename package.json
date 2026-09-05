@@ -40,6 +40,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
+    "postinstall": "node scripts/postinstall.mjs",
     "prepare": "husky",
     "init": "node scripts/init.mjs",
     "test": "vitest --project=unit --project=browser",

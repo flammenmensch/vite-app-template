@@ -84,8 +84,11 @@ try {
     delete pkg.homepage
   }
 
-  // Neither belongs to the new project.
+  // Neither belongs to the new project. `postinstall` and `init` both point
+  // into scripts/, which this script deletes -- leaving either behind would
+  // break every later `pnpm install`.
   delete pkg.keywords
+  delete pkg.scripts.postinstall
   delete pkg.scripts.init
 
   await write('package.json', `${JSON.stringify(pkg, null, 2)}\n`)

@@ -29,6 +29,10 @@ pnpm install
 pnpm run init      # prompts for name, author, repo; rewrites metadata, then removes itself
 ```
 
+`pnpm install` prints these next steps itself on a fresh scaffold, because degit
+cannot run them for you: its actions are `clone`, `search_replace` and `remove`
+only, by design, since it copies untrusted repositories.
+
 `init` also initialises a git repository and installs the commit hooks. That has
 to happen here rather than during `pnpm install`, because husky's `prepare` step
 needs `.git` to already exist and `degit` gives you a directory without one — it
