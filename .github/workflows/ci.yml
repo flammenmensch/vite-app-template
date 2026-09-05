@@ -74,6 +74,11 @@ jobs:
       # change glyph rasterisation. The container is the environment; the
       # runner is only where it gets started.
       - name: Run visual suite in the pinned container
+        # Explicit rather than implied: the container defaults to the host's
+        # architecture, and the committed baselines this compares against were
+        # recorded on amd64.
+        env:
+          VISUAL_PLATFORM: linux/amd64
         run: docker compose run --rm --build visual
       - name: Upload diffs
         if: failure()

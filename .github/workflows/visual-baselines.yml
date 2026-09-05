@@ -24,6 +24,8 @@ jobs:
           # a dependency's install script included -- could read it.
           persist-credentials: false
       - name: Record baselines
+        env:
+          VISUAL_PLATFORM: linux/amd64
         run: docker compose run --rm --build visual pnpm exec vitest run --project=visual --update
       - name: Upload baselines
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

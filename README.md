@@ -150,9 +150,9 @@ one.
 
 ## Visual regression
 
-Visual tests run **only in Docker**, pinned to `linux/amd64`. That is the whole
-point: a baseline should record what a component looks like, not what it looks
-like on the machine that happened to record it.
+Visual tests run **only in Docker**. That is the whole point: a baseline should
+record what a component looks like, not what it looks like on the machine that
+happened to record it.
 
 ```sh
 pnpm test:visual          # compare against committed baselines
@@ -160,17 +160,38 @@ pnpm test:visual:update   # re-record after an intended change
 pnpm test:visual:shell    # interactive shell in the container
 ```
 
-On Apple Silicon, emulated amd64 is slow and unreliable under Colima's QEMU
-backend (pnpm's threaded I/O trips a libuv assertion). Run natively instead:
+The container uses **your host's architecture** by default, and baselines for
+both amd64 and arm64 are committed, so this works out of the box either way.
+Baselines carry `process.arch` in their filename, so the two sets sit side by
+side and can never be compared against each other by mistake.
+
+CI pins `VISUAL_PLATFORM=linux/amd64` explicitly. To reproduce a CI failure
+locally on Apple Silicon you need Rosetta, because under QEMU emulation Node
+aborts inside libuv before any test runs:
 
 ```sh
-VISUAL_PLATFORM=linux/arm64 pnpm test:visual
+colima start --vm-type=vz --vz-rosetta   # once
+VISUAL_PLATFORM=linux/amd64 pnpm test:visual
 ```
 
-Baselines carry `process.arch`, so arm64 and amd64 sets sit side by side and can
-never be compared against each other by mistake. CI always uses the amd64
-default. If you only have arm64 baselines, run the **Record visual baselines**
-workflow (`workflow_dispatch`) to produce amd64 ones and commit the artifact.
+If you add a component on arm64, you will have an arm64 baseline and CI will
+fail with "no reference screenshot found" for amd64. Run the **Record visual
+baselines** workflow (`workflow_dispatch`), download the artifact, and commit
+the PNGs.
+
+### Troubleshooting
+
+**`exit code: 134` during `pnpm install` in the container.** That is `SIGABRT`,
+and the real cause is the line Docker's summary scrolls past:
+
+```
+node: ../deps/uv/src/unix/linux.c:1427: uv__io_poll: Assertion `errno == EEXIST' failed.
+```
+
+You are running an amd64 container on an arm64 host under QEMU, whose syscall
+emulation returns an `errno` libuv asserts cannot happen. The install itself
+succeeded; Node aborted afterwards. Either drop the `VISUAL_PLATFORM=linux/amd64`
+override to run natively, or enable Rosetta as above.
 
 Baselines live directly in `__screenshots__/` next to the test — one file per
 case, no per-test-file subdirectory — and **are committed**;
@@ -178,15 +199,15 @@ the baseline is the assertion, so it belongs in review alongside the change that
 moves it. Failure diffs are written to `.vitest/attachments/` and ignored by git;
 CI uploads them as an artifact.
 
-### Why the architecture is pinned
+### Why the architecture is in the filename
 
 Vitest names baselines `${arg}-${browser}-${platform}${ext}`, where `platform`
 comes from `os.platform()` — so arm64 Linux and amd64 Linux both write
 `-linux.png` while rendering differently. This template adds `process.arch` via
-`resolveScreenshotPath`, and pins the container to `linux/amd64` to match
-standard CI runners. On Apple Silicon the container is emulated and therefore
-slower, but its output is byte-identical to CI. If the pin is ever lost, you get
-a clean "no reference screenshot found" failure rather than a mystery diff.
+`resolveScreenshotPath`, so the two never collide. A run on an architecture
+with no committed baseline fails with a clean "no reference screenshot found"
+rather than a mystery diff — which is why running natively is safe to default
+to.
 
 CI runs the same container even though its runners are already amd64 Linux:
 matching the architecture is not sufficient, because font packages and freetype
