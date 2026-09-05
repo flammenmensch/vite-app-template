@@ -64,7 +64,7 @@ pnpm exec playwright install chromium   # for the browser test suite
 pnpm start
 ```
 
-Requires Node `>=24.11.0` (see `.nvmrc`) and pnpm 11. Docker is needed only for
+Requires Node `>=24.20.0` (see `.nvmrc`) and pnpm 11. Docker is needed only for
 visual regression.
 
 ## Scripts

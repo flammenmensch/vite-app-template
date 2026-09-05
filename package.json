@@ -82,10 +82,10 @@
     "typescript": "~7.0.2",
     "vite": "^8.2.2",
     "vitest": "^5.0.0",
-    "vitest-browser-react": "^2.2.0"
+    "vitest-browser-react": "^2.3.0"
   },
   "engines": {
-    "node": ">=24.11.0"
+    "node": ">=24.20.0"
   },
   "packageManager": "pnpm@11.25.0"
 }
