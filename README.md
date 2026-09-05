@@ -196,29 +196,32 @@ CI uploads them as an artifact.
 ### Why one baseline works across architectures
 
 A container pins the OS, the fonts, freetype and the Chromium build — but not
-the instruction set. Skia has separate NEON and SSE/AVX rasterisers, and they do
-not agree bit-for-bit on gradients, blur or blend modes.
+the instruction set, and Skia has separate NEON and SSE/AVX rasterisers. Whether
+that actually matters was measured rather than assumed, by recording on arm64
+and on an amd64 CI runner and comparing pixel by pixel.
 
-That was measured rather than assumed. A component built to provoke the
-difference — conic, radial and linear gradients, a gaussian blur, `mix-blend-mode`,
-rotation, fractional-pixel offsets — was recorded on arm64 and on an amd64 CI
-runner:
+For ordinary product UI it does not matter at all:
 
-|                                      |                               |
-| ------------------------------------ | ----------------------------- |
-| pixels differing in any byte         | 33,050 / 221,440 (**14.93%**) |
-| pixels beyond pixelmatch's threshold | **0**                         |
-| worst pixel, YIQ metric              | 131.8 against a 352.2 cutoff  |
+| recorded on both architectures                                                                 | pixels differing |
+| ---------------------------------------------------------------------------------------------- | ---------------- |
+| plain text heading                                                                             | **0** of 51,200  |
+| settings page — card, border, box-shadow, gradient avatar, buttons, input, text at three sizes | **0** of 401,920 |
 
-So the images are genuinely different and uniformly sub-perceptual. Plain text
-came out byte-identical; only the effects diverge, and never far enough to
-register. One baseline therefore serves every architecture, which is also what
-Playwright and Vitest do by default — they key baselines on platform alone.
+Byte-identical. The architectures diverge only under heavy compositing: a
+component using `conic-gradient`, `mix-blend-mode`, `filter: blur()` and
+rotation together differed in **14.93%** of pixels — though even then the worst
+pixel scored 131.8 on pixelmatch's YIQ metric against the 352.2 that counts as
+different, so nothing was perceptible.
 
-The cost is that `threshold: 0.1` is now load-bearing. The margin is 2.7×, so
-lowering it to catch subtler regressions would start failing across
-architectures, and which machine recorded a baseline would begin to matter.
-Widen one noisy case through `visualTest`'s `screenshot` option instead.
+So one baseline covers every architecture, which is also what Playwright and
+Vitest do by default. `threshold: 0.1` is pixelmatch's own default and is
+genuine antialiasing slack for anything you are likely to build; it only carries
+real weight in that last case.
+
+Baselines are named `${arg}-${browserName}${ext}`. There is no platform or
+architecture in the name: these tests run only in the container, so the platform
+is always `linux`, and the measurements above are why the architecture does not
+need to be distinguished either.
 
 CI runs the same container even though its runners are already amd64 Linux:
 matching the architecture is not sufficient, because font packages and freetype

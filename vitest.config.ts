@@ -50,12 +50,13 @@ type ScreenshotComparison = NonNullable<
 
 const screenshotComparison: ScreenshotComparison = {
   /**
-   * One baseline per case, in the component's own `__screenshots__/`. Vitest
-   * would add a per-test-file subdirectory; these functions drop it.
+   * One baseline per case, in the component's own `__screenshots__/`.
    *
-   * Deliberately no `process.arch`: a baseline recorded on arm64 is compared
-   * against on amd64 and vice versa. See `comparatorOptions` below for why that
-   * holds, and `README.md` for the measurements behind it.
+   * Vitest's default name is `${arg}-${browser}-${platform}${ext}` under a
+   * per-test-file subdirectory. Both the subdirectory and `platform` are
+   * dropped: visual tests run only in the container, so the platform is always
+   * `linux` and never distinguished anything. `browserName` stays, because
+   * adding a second browser instance would otherwise collide.
    */
   resolveScreenshotPath: ({
     root,
@@ -64,13 +65,12 @@ const screenshotComparison: ScreenshotComparison = {
     arg,
     ext,
     browserName,
-    platform,
   }) =>
     resolve(
       root,
       testFileDirectory,
       screenshotDirectory,
-      `${arg}-${browserName}-${platform}${ext}`
+      `${arg}-${browserName}${ext}`
     ),
   resolveDiffPath: ({
     root,
@@ -79,29 +79,31 @@ const screenshotComparison: ScreenshotComparison = {
     arg,
     ext,
     browserName,
-    platform,
   }) =>
     resolve(
       root,
       attachmentsDir,
       testFileDirectory,
-      `${arg}-${browserName}-${platform}-diff${ext}`
+      `${arg}-${browserName}-diff${ext}`
     ),
   comparatorName: 'pixelmatch',
   comparatorOptions: {
     /**
-     * This tolerance is load-bearing, not slack. The container pins the OS,
-     * fonts, freetype and Chromium, but not the instruction set: Skia's NEON
-     * and SSE/AVX rasterisers disagree on gradients, blur and blend modes.
-     * Measured on a deliberately adversarial component, arm64 and amd64
-     * differed in 14.93% of pixels -- while the worst pixel scored 131.8 on
-     * pixelmatch's YIQ metric against the 352.2 that counts as different. So
-     * every difference is sub-perceptual and one baseline serves both.
+     * pixelmatch's own default. Ordinary UI does not need it: text, borders,
+     * radii, box-shadows and linear gradients were measured byte-identical
+     * between arm64 and amd64 in this container -- 0 of 401,920 pixels differed
+     * on a realistic settings page, and 0 of 51,200 on plain text.
      *
-     * The margin is 2.7x, so lowering `threshold` to catch subtler regressions
-     * will start failing across architectures, and which machine recorded the
-     * baseline will start to matter. Widen a single noisy case through
-     * `visualTest`'s `screenshot` option instead of tightening this globally.
+     * It earns its place only on heavy compositing. A component using
+     * conic-gradient, mix-blend-mode, filter: blur() and rotation together
+     * differed in 14.93% of pixels across the two architectures, though the
+     * worst pixel still scored only 131.8 against the 352.2 that counts as
+     * different. So the tolerance is what lets one baseline cover both
+     * architectures in the rare case that needs it, not something every
+     * component leans on.
+     *
+     * Widen a single noisy case through `visualTest`'s `screenshot` option
+     * rather than loosening this globally.
      */
     allowedMismatchedPixelRatio: 0.01,
     threshold: 0.1,
