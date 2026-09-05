@@ -29,6 +29,14 @@ pnpm install
 pnpm run init      # prompts for name, author, repo; rewrites metadata, then removes itself
 ```
 
+`init` also initialises a git repository and installs the commit hooks. That has
+to happen here rather than during `pnpm install`, because husky's `prepare` step
+needs `.git` to already exist and `degit` gives you a directory without one — it
+exits quietly in that case, and nothing re-runs it afterwards, not even a later
+`git init`. Skipping `init` therefore leaves you with no lint-staged and no
+commitlint, and nothing to tell you. If you do skip it, run `git init` followed
+by `pnpm run prepare` yourself.
+
 `init` rewrites `package.json`, the `index.html` title, and this README. The
 visual baselines it leaves behind belong to the template's `Header`, so
 re-record them once your own components exist:

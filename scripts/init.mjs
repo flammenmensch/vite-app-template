@@ -8,8 +8,13 @@
  * rewrites that identity, replaces the README with one about the new project,
  * and then deletes itself so it cannot be run twice.
  *
+ * It also installs the git hooks, which cannot happen during `pnpm install`
+ * when the project was scaffolded with `degit` -- see `installGitHooks` below.
+ *
  *     pnpm run init
  */
+import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { readFile, writeFile, rm } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import { stdin, stdout, exit } from 'node:process'
@@ -21,6 +26,43 @@ const write = (file, contents) => writeFile(resolve(root, file), contents)
 
 /** npm package names: lowercase, no spaces, optionally scoped. */
 const NAME = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
+
+const run = (command, args) =>
+  execFileSync(command, args, { cwd: root, stdio: 'pipe' })
+
+/**
+ * Install husky's git hooks.
+ *
+ * The `prepare` script normally does this during `pnpm install`, but husky
+ * needs a `.git` directory to exist at that moment and exits 0 without one --
+ * it has to, since it is also installed transitively, in CI, and in this
+ * project's Docker image, none of which are git repositories.
+ *
+ * `degit` copies files without any git history, so the order ends up backwards:
+ * install runs first, finds no repository, and quietly does nothing. Nothing
+ * re-runs `prepare` afterwards, not even `git init`, so the hooks would stay
+ * uninstalled permanently and lint-staged and commitlint would never fire.
+ *
+ * Running here closes that gap, because this is the one step that happens after
+ * install. It is idempotent: projects created with GitHub's "Use this template"
+ * already have a repository and working hooks, and re-running husky is a no-op.
+ */
+const installGitHooks = () => {
+  try {
+    if (!existsSync(resolve(root, '.git'))) {
+      run('git', ['init', '--quiet'])
+      console.log('Initialised a git repository.')
+    }
+    run(resolve(root, 'node_modules', '.bin', 'husky'), [])
+    console.log('Installed git hooks.')
+  } catch (error) {
+    // Never fail the whole setup over hooks -- the metadata rewrite above has
+    // already been written, and a second run is impossible once this script
+    // deletes itself.
+    console.warn(`\nCould not install git hooks: ${error.message}`)
+    console.warn('Run `git init` and then `pnpm run prepare` to finish.\n')
+  }
+}
 
 const rl = createInterface({ input: stdin, output: stdout })
 
@@ -97,6 +139,8 @@ try {
       '',
     ].join('\n')
   )
+
+  installGitHooks()
 
   await rm(resolve(root, 'scripts'), { recursive: true, force: true })
 
