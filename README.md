@@ -33,6 +33,13 @@ pnpm run init      # prompts for name, author, repo; rewrites metadata, then rem
 cannot run them for you: its actions are `clone`, `search_replace` and `remove`
 only, by design, since it copies untrusted repositories.
 
+What degit _can_ do is delete things, and `degit.json` uses that to drop this
+template's own visual baselines — screenshots of a `Header` your project is
+about to replace, recorded on one architecture. A scaffold therefore starts with
+no baselines, and the first `pnpm test:visual` fails with "No existing reference
+screenshot found" until you record your own with `pnpm test:visual:update`. That
+is deliberate: an inherited baseline is worse than an absent one.
+
 `init` also initialises a git repository and installs the commit hooks. That has
 to happen here rather than during `pnpm install`, because husky's `prepare` step
 needs `.git` to already exist and `degit` gives you a directory without one — it

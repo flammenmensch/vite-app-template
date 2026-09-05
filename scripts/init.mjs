@@ -125,6 +125,9 @@ try {
 
   installGitHooks()
 
+  // degit deletes this itself; it only survives on the "Use this template"
+  // path, where nothing runs degit's actions.
+  await rm(resolve(root, 'degit.json'), { force: true })
   await rm(resolve(root, 'scripts'), { recursive: true, force: true })
 
   console.log(`\nDone. "${name}" is ready.`)

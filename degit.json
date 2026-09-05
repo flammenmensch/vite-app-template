@@ -1,0 +1,11 @@
+[
+  {
+    "action": "remove",
+    "allowGlobs": true,
+    "files": [
+      "src/components/Header/__screenshots__/**",
+      "src/components/Header/__screenshots__",
+      "degit.json"
+    ]
+  }
+]
