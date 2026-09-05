@@ -31,6 +31,13 @@ services:
       - visual-node-modules:/app/node_modules
       # Survives `--build`, so reinstalls are near-instant.
       - visual-pnpm-store:/pnpm/store
+      # The bind mount above is read-write and this container runs as root, so
+      # without these the visual suite could write the host's git directory and
+      # hooks -- and a hook planted from in here would then run on the host at
+      # the next commit. Nothing in a screenshot run needs either, so mask them
+      # with empty anonymous volumes.
+      - /app/.git
+      - /app/.husky
 
 volumes:
   visual-node-modules:

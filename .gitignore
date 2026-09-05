@@ -15,6 +15,13 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Environment files. `*.local` above already covers `.env.local`, but a plain
+# `.env` is where secrets usually end up. Note that Vite inlines any `VITE_`
+# prefixed variable into the client bundle, so those are public by definition.
+.env
+.env.*
+!.env.example
 # Ladle's production build output.
 build
 

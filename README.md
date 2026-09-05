@@ -246,18 +246,56 @@ the policy for exactly the package it was protecting you from. Wait instead — 
 blocked install clears on its own.
 
 `allowBuilds` lists the transitive packages permitted to run install scripts.
-Adding to it should be a deliberate decision, not a reflex.
+pnpm blocks every dependency lifecycle script unless it is named there, and the
+list holds exactly the three that need one — `@swc/core`, `esbuild` and `msw`,
+each unpacking a prebuilt native binary. Note that `prepare` and `prepublish`
+never run for registry dependencies, so the audited surface really is those
+three. Adding to the list should be a deliberate decision, not a reflex.
 
 `.ncurc.js` derives `ncu`'s `--cooldown` from the same `minimumReleaseAge`
 value, so `npx npm-check-updates` never offers a version `pnpm install` would
 then refuse. It is read from `pnpm-workspace.yaml` rather than repeated, so the
 two cannot drift apart.
 
+## What runs on your machine
+
+Everything this template executes for you, and why it is safe to let it:
+
+| when               | what runs                                                                                                                                                                        |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`     | `scripts/postinstall.mjs` (prints next steps), `scripts/prepare.mjs` (installs git hooks, only if `.git` exists), and the install scripts of the three packages in `allowBuilds` |
+| `git commit`       | `.husky/pre-commit` → lint-staged → oxlint/oxfmt; `.husky/commit-msg` → commitlint                                                                                               |
+| `pnpm run init`    | reads `git config`/`npm config` for defaults, runs `git init` and husky, rewrites metadata, deletes `scripts/`                                                                   |
+| `pnpm test:visual` | Docker builds and runs the container in `compose.yaml`                                                                                                                           |
+
+The scripts in `scripts/` spawn commands only through `execFileSync` with an
+argument array and never `shell: true`, so nothing you type at a prompt reaches
+a shell. The project name is validated against the npm naming rules before it is
+written anywhere.
+
+Nothing in the app loads code from a CDN — `index.html` references only local
+sources — and the dev server keeps Vite's default of binding localhost.
+
+The visual container runs as root over a read-write bind mount of the project,
+so `compose.yaml` masks `.git` and `.husky` with empty volumes. Without that, a
+compromised test-time dependency could write a git hook that then executes on
+the host at your next commit — a host escape needing no container escape.
+
+If you add environment variables, remember that Vite **inlines every `VITE_`
+prefixed variable into the client bundle**. Those are public. Secrets belong on
+a server, and `.env` files are gitignored here.
+
 ## CI
 
 `.github/workflows/ci.yml` runs four jobs on every push and pull request:
 **quality** (oxlint, oxfmt, `tsc -b`), **test** (unit + browser + coverage),
 **visual** (the container), and **build** (app + Ladle).
+
+Workflows hold `permissions: contents: read`, trigger on `pull_request` rather
+than `pull_request_target` (so fork PRs get no secrets), pin every action to a
+commit SHA rather than a movable tag, and pass `persist-credentials: false` to
+`actions/checkout` so the job token never lands in `.git/config` where a later
+step could read it. No workflow interpolates `github.event` data into a shell.
 
 ## License
 
