@@ -131,26 +131,21 @@ and whatever is behind it; `:focus-visible` uses it globally.
 
 The rest is one scale per concern:
 
-| scale         | values                       |
-| ------------- | ---------------------------- |
-| `font`        | `body` `heading` `mono`      |
-| `fontSize`    | `sm` … `xxl`                 |
-| `fontWeight`  | `normal` `medium` `bold`     |
-| `lineHeight`  | `tight` `normal`             |
-| `space`       | `xs` … `xl`                  |
-| `radii`       | `sm` `md` `full`             |
-| `borderWidth` | `thin` `thick`               |
-| `shadow`      | `sm` `md` `lg`               |
-| `duration`    | `fast` `normal` `slow`       |
-| `easing`      | `standard` `entrance` `exit` |
+| scale         | values                   |
+| ------------- | ------------------------ |
+| `font`        | `body` `heading` `mono`  |
+| `fontSize`    | `sm` … `xxl`             |
+| `fontWeight`  | `normal` `medium` `bold` |
+| `lineHeight`  | `tight` `normal`         |
+| `space`       | `xs` … `xl`              |
+| `radii`       | `sm` `md` `full`         |
+| `borderWidth` | `thin` `thick`           |
+| `shadow`      | `sm` `md` `lg`           |
+| `duration`    | `fast` `normal` `slow`   |
 
 `shadow` is elevation rather than decoration — each step should read as further
 from the page than the last. Note it is a theme value, not a constant: a black
 shadow does nothing on a dark surface, so a second theme needs its own.
-
-Motion is asymmetric on purpose: things arriving should decelerate into place
-(`entrance`) and things leaving should accelerate away (`exit`). One symmetric
-curve for both is what makes an interface feel sluggish on exit.
 
 `prefers-reduced-motion` is honoured once, centrally, by collapsing the duration
 tokens to `1ms`. Anything that animates through them follows automatically — no
@@ -167,8 +162,11 @@ browser.
 This is unrelated to `setup.visual.ts`, which freezes motion outright for
 screenshot determinism regardless of the viewer's preference.
 
-Still deliberately absent: `zIndex` and breakpoints. Add them against the same
-shape when you need them.
+Still deliberately absent: `easing`, `zIndex` and breakpoints. Named easing
+curves are a design system's opinion rather than a template's — most projects
+replace them wholesale, so there is nothing to inherit. Breakpoints cannot be
+theme tokens at all, since CSS custom properties are not allowed in `@media`
+conditions; they have to be TypeScript constants.
 
 Two things worth knowing before you extend it. Font stacks are system fonts, so
 no webfont load can race a screenshot; adding one means re-recording baselines.

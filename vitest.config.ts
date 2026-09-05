@@ -29,10 +29,9 @@ const componentPlugins = () => [
 const viewport = { width: 1280, height: 720 }
 
 /**
- * A factory, not a shared constant: Vitest mutates each instance to stamp the
- * resolved project name onto it, so two projects spreading one object would
- * collide on "project name was already defined". `satisfies` rather than an
- * annotation keeps `browser: 'chromium'` a literal.
+ * A factory, not a shared constant: Vitest stamps the resolved project name
+ * onto each instance, so two projects spreading one object collide on "project
+ * name was already defined". `satisfies` keeps `browser: 'chromium'` a literal.
  */
 const chromium = (name: string) =>
   ({
@@ -50,13 +49,10 @@ type ScreenshotComparison = NonNullable<
 
 const screenshotComparison: ScreenshotComparison = {
   /**
-   * One baseline per case, in the component's own `__screenshots__/`.
-   *
-   * Vitest's default name is `${arg}-${browser}-${platform}${ext}` under a
-   * per-test-file subdirectory. Both the subdirectory and `platform` are
-   * dropped: visual tests run only in the container, so the platform is always
-   * `linux` and never distinguished anything. `browserName` stays, because
-   * adding a second browser instance would otherwise collide.
+   * One baseline per case, in the component's own `__screenshots__/`. Vitest's
+   * default adds a per-test-file subdirectory and a `${platform}` segment; both
+   * are dropped, since these tests only ever run in the container. `browserName`
+   * stays, or a second browser instance would overwrite the first.
    */
   resolveScreenshotPath: ({
     root,
@@ -89,20 +85,11 @@ const screenshotComparison: ScreenshotComparison = {
   comparatorName: 'pixelmatch',
   comparatorOptions: {
     /**
-     * pixelmatch's own default. Ordinary UI does not need it: text, borders,
-     * radii, box-shadows and linear gradients were measured byte-identical
-     * between arm64 and amd64 in this container -- 0 of 401,920 pixels differed
-     * on a realistic settings page, and 0 of 51,200 on plain text.
-     *
-     * It earns its place only on heavy compositing. A component using
-     * conic-gradient, mix-blend-mode, filter: blur() and rotation together
-     * differed in 14.93% of pixels across the two architectures, though the
-     * worst pixel still scored only 131.8 against the 352.2 that counts as
-     * different. So the tolerance is what lets one baseline cover both
-     * architectures in the rare case that needs it, not something every
-     * component leans on.
-     *
-     * Widen a single noisy case through `visualTest`'s `screenshot` option
+     * pixelmatch's default, and antialiasing slack for anything you are likely
+     * to build: ordinary UI measured byte-identical between arm64 and amd64 in
+     * this container. It only carries weight under heavy compositing, where the
+     * two diverged in 14.93% of pixels but never perceptibly. README has the
+     * numbers. Widen one noisy case via `visualTest`'s `screenshot` option
      * rather than loosening this globally.
      */
     allowedMismatchedPixelRatio: 0.01,
@@ -112,12 +99,7 @@ const screenshotComparison: ScreenshotComparison = {
 
 export default defineConfig({
   test: {
-    /**
-     * A scaffold is expected to delete these examples, and a project can
-     * legitimately have no browser or visual tests at all. Without this, every
-     * such command exits 1 with "No test files found" and CI fails for having
-     * nothing to do.
-     */
+    /** A scaffold deletes these examples, and may never add a visual test. */
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
@@ -132,15 +114,10 @@ export default defineConfig({
         'src/main.tsx',
       ],
       /**
-       * No thresholds on purpose. A scaffold starts with no tests of its own,
-       * and any non-zero floor fails it -- as does the first component someone
-       * writes before testing it. Coverage is still measured and uploaded by
-       * CI; set your own floor here once you have a suite worth holding.
-       *
-       * If you do, note that `statements` and `branches` need slack the other
-       * two do not: the React Compiler emits cache-hit/cache-miss pairs, some
-       * unreachable from any test -- a rest-spread builds a fresh object every
-       * render, so its "unchanged" branch can never be taken.
+       * No thresholds: a scaffold starts with no tests, and any non-zero floor
+       * fails it. If you add one, `statements` and `branches` need slack that
+       * `lines` and `functions` do not -- the React Compiler emits
+       * cache-hit/cache-miss pairs, some unreachable from any test.
        */
     },
     projects: [
