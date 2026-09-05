@@ -7,9 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
     # Empty means the host's own architecture, so `pnpm test:visual` works out
-    # of the box everywhere. Baselines carry `process.arch` in their filename
-    # and both architectures are committed, so a native run compares against
-    # the matching baseline and never against the other one.
+    # of the box everywhere. There is one baseline per case regardless of
+    # architecture -- see the comparator notes in vitest.config.ts.
     #
     # Set VISUAL_PLATFORM=linux/amd64 to reproduce CI exactly, which is what
     # the workflows do. On Apple Silicon that needs Rosetta

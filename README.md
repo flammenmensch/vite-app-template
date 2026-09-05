@@ -160,24 +160,18 @@ pnpm test:visual:update   # re-record after an intended change
 pnpm test:visual:shell    # interactive shell in the container
 ```
 
-The container uses **your host's architecture** by default, and baselines for
-both amd64 and arm64 are committed, so this works out of the box either way.
-Baselines carry `process.arch` in their filename, so the two sets sit side by
-side and can never be compared against each other by mistake.
+The container uses **your host's architecture** by default, and there is **one
+baseline per case**, shared across architectures. Record it wherever you work
+and CI validates that same file — no second recording step, no round-trip.
 
-CI pins `VISUAL_PLATFORM=linux/amd64` explicitly. To reproduce a CI failure
-locally on Apple Silicon you need Rosetta, because under QEMU emulation Node
-aborts inside libuv before any test runs:
+CI pins `VISUAL_PLATFORM=linux/amd64` explicitly, since that is what its runners
+are. To reproduce a CI failure locally on Apple Silicon you need Rosetta,
+because under QEMU emulation Node aborts inside libuv before any test runs:
 
 ```sh
 colima start --vm-type=vz --vz-rosetta   # once
 VISUAL_PLATFORM=linux/amd64 pnpm test:visual
 ```
-
-If you add a component on arm64, you will have an arm64 baseline and CI will
-fail with "no reference screenshot found" for amd64. Run the **Record visual
-baselines** workflow (`workflow_dispatch`), download the artifact, and commit
-the PNGs.
 
 ### Troubleshooting
 
@@ -199,15 +193,32 @@ the baseline is the assertion, so it belongs in review alongside the change that
 moves it. Failure diffs are written to `.vitest/attachments/` and ignored by git;
 CI uploads them as an artifact.
 
-### Why the architecture is in the filename
+### Why one baseline works across architectures
 
-Vitest names baselines `${arg}-${browser}-${platform}${ext}`, where `platform`
-comes from `os.platform()` — so arm64 Linux and amd64 Linux both write
-`-linux.png` while rendering differently. This template adds `process.arch` via
-`resolveScreenshotPath`, so the two never collide. A run on an architecture
-with no committed baseline fails with a clean "no reference screenshot found"
-rather than a mystery diff — which is why running natively is safe to default
-to.
+A container pins the OS, the fonts, freetype and the Chromium build — but not
+the instruction set. Skia has separate NEON and SSE/AVX rasterisers, and they do
+not agree bit-for-bit on gradients, blur or blend modes.
+
+That was measured rather than assumed. A component built to provoke the
+difference — conic, radial and linear gradients, a gaussian blur, `mix-blend-mode`,
+rotation, fractional-pixel offsets — was recorded on arm64 and on an amd64 CI
+runner:
+
+|                                      |                               |
+| ------------------------------------ | ----------------------------- |
+| pixels differing in any byte         | 33,050 / 221,440 (**14.93%**) |
+| pixels beyond pixelmatch's threshold | **0**                         |
+| worst pixel, YIQ metric              | 131.8 against a 352.2 cutoff  |
+
+So the images are genuinely different and uniformly sub-perceptual. Plain text
+came out byte-identical; only the effects diverge, and never far enough to
+register. One baseline therefore serves every architecture, which is also what
+Playwright and Vitest do by default — they key baselines on platform alone.
+
+The cost is that `threshold: 0.1` is now load-bearing. The margin is 2.7×, so
+lowering it to catch subtler regressions would start failing across
+architectures, and which machine recorded a baseline would begin to matter.
+Widen one noisy case through `visualTest`'s `screenshot` option instead.
 
 CI runs the same container even though its runners are already amd64 Linux:
 matching the architecture is not sufficient, because font packages and freetype

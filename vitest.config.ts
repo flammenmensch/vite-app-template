@@ -50,11 +50,12 @@ type ScreenshotComparison = NonNullable<
 
 const screenshotComparison: ScreenshotComparison = {
   /**
-   * Vitest's default name uses `os.platform()`, which is `linux` on both arm64
-   * and amd64 -- two architectures would overwrite each other's baselines while
-   * rendering differently. With `process.arch` a mismatch fails with "no
-   * reference screenshot found" instead. The per-test-file subdirectory is
-   * dropped; baselines already sit in the component's folder.
+   * One baseline per case, in the component's own `__screenshots__/`. Vitest
+   * would add a per-test-file subdirectory; these functions drop it.
+   *
+   * Deliberately no `process.arch`: a baseline recorded on arm64 is compared
+   * against on amd64 and vice versa. See `comparatorOptions` below for why that
+   * holds, and `README.md` for the measurements behind it.
    */
   resolveScreenshotPath: ({
     root,
@@ -69,7 +70,7 @@ const screenshotComparison: ScreenshotComparison = {
       root,
       testFileDirectory,
       screenshotDirectory,
-      `${arg}-${browserName}-${platform}-${process.arch}${ext}`
+      `${arg}-${browserName}-${platform}${ext}`
     ),
   resolveDiffPath: ({
     root,
@@ -84,12 +85,24 @@ const screenshotComparison: ScreenshotComparison = {
       root,
       attachmentsDir,
       testFileDirectory,
-      `${arg}-${browserName}-${platform}-${process.arch}-diff${ext}`
+      `${arg}-${browserName}-${platform}-diff${ext}`
     ),
   comparatorName: 'pixelmatch',
   comparatorOptions: {
-    // Subpixel antialiasing only; widen one noisy case via `visualTest`'s
-    // `screenshot` option rather than loosening it here.
+    /**
+     * This tolerance is load-bearing, not slack. The container pins the OS,
+     * fonts, freetype and Chromium, but not the instruction set: Skia's NEON
+     * and SSE/AVX rasterisers disagree on gradients, blur and blend modes.
+     * Measured on a deliberately adversarial component, arm64 and amd64
+     * differed in 14.93% of pixels -- while the worst pixel scored 131.8 on
+     * pixelmatch's YIQ metric against the 352.2 that counts as different. So
+     * every difference is sub-perceptual and one baseline serves both.
+     *
+     * The margin is 2.7x, so lowering `threshold` to catch subtler regressions
+     * will start failing across architectures, and which machine recorded the
+     * baseline will start to matter. Widen a single noisy case through
+     * `visualTest`'s `screenshot` option instead of tightening this globally.
+     */
     allowedMismatchedPixelRatio: 0.01,
     threshold: 0.1,
   },
