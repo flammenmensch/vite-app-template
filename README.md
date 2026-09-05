@@ -246,6 +246,11 @@ blocked install clears on its own.
 `allowBuilds` lists the transitive packages permitted to run install scripts.
 Adding to it should be a deliberate decision, not a reflex.
 
+`.ncurc.js` derives `ncu`'s `--cooldown` from the same `minimumReleaseAge`
+value, so `npx npm-check-updates` never offers a version `pnpm install` would
+then refuse. It is read from `pnpm-workspace.yaml` rather than repeated, so the
+two cannot drift apart.
+
 ## CI
 
 `.github/workflows/ci.yml` runs four jobs on every push and pull request:
