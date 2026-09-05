@@ -71,18 +71,18 @@ visual regression.
 
 ## Scripts
 
-| Script                      | Does                                    |
-| --------------------------- | --------------------------------------- |
-| `pnpm start`                | Dev server                              |
-| `pnpm start:ladle`          | Component workbench                     |
-| `pnpm build`                | Typecheck, then production build        |
-| `pnpm lint` / `pnpm format` | oxlint / oxfmt                          |
-| `pnpm test`                 | Watch unit + browser                    |
-| `pnpm test:run`             | Single run, unit + browser              |
-| `pnpm test:coverage`        | Unit + browser with coverage thresholds |
-| `pnpm test:visual`          | Visual regression, in Docker            |
-| `pnpm test:visual:update`   | Re-record baselines, in Docker          |
-| `pnpm test:all`             | Everything CI runs                      |
+| Script                      | Does                                   |
+| --------------------------- | -------------------------------------- |
+| `pnpm start`                | Dev server                             |
+| `pnpm start:ladle`          | Component workbench                    |
+| `pnpm build`                | Typecheck, then production build       |
+| `pnpm lint` / `pnpm format` | oxlint / oxfmt                         |
+| `pnpm test`                 | Watch unit + browser                   |
+| `pnpm test:run`             | Single run, unit + browser             |
+| `pnpm test:coverage`        | Unit + browser, with a coverage report |
+| `pnpm test:visual`          | Visual regression, in Docker           |
+| `pnpm test:visual:update`   | Re-record baselines, in Docker         |
+| `pnpm test:all`             | Everything CI runs                     |
 
 ## Project structure
 
@@ -109,6 +109,10 @@ separately). Test _files_ stay next to the code they cover.
 
 ## Testing
 
+Every test command passes when it finds nothing to run (`passWithNoTests`), so a
+project that has deleted the examples — or has not written a browser or visual
+test yet — still gets a green build rather than "No test files found".
+
 Three Vitest projects, defined together in `vitest.config.ts`. Which one a test
 lands in is decided by its filename:
 
@@ -134,9 +138,15 @@ This has a visible consequence in coverage: the compiler wraps each component in
 a memo cache, so every prop read becomes a cache-hit/cache-miss branch pair. A
 first render only ever takes the miss path, which is why components have
 re-render tests. Some pairs stay unreachable regardless — a rest-spread builds a
-fresh object every render, so its "unchanged" branch can never be taken. The
-`statements` and `branches` thresholds are therefore floors rather than 100%;
-`lines` and `functions` are held at 100.
+fresh object every render, so its "unchanged" branch can never be taken. Keep
+that in mind if you add coverage thresholds: `statements` and `branches` need
+slack that `lines` and `functions` do not.
+
+The template ships **no thresholds**. A scaffold starts with no tests of its
+own, and any non-zero floor would fail it — as would the first component you
+write before testing it. Coverage is still measured, printed, and uploaded by
+CI; add a floor in `vitest.config.ts` once you have a suite worth holding to
+one.
 
 ## Visual regression
 

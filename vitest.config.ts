@@ -97,6 +97,13 @@ const screenshotComparison: ScreenshotComparison = {
 
 export default defineConfig({
   test: {
+    /**
+     * A scaffold is expected to delete these examples, and a project can
+     * legitimately have no browser or visual tests at all. Without this, every
+     * such command exits 1 with "No test files found" and CI fails for having
+     * nothing to do.
+     */
+    passWithNoTests: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
@@ -110,12 +117,16 @@ export default defineConfig({
         'src/main.tsx',
       ],
       /**
-       * `statements` and `branches` are floors, not targets: React Compiler
-       * emits cache-hit/cache-miss pairs, some unreachable from a test -- a
-       * rest-spread builds a fresh object every render, so its "unchanged"
-       * branch can never be taken.
+       * No thresholds on purpose. A scaffold starts with no tests of its own,
+       * and any non-zero floor fails it -- as does the first component someone
+       * writes before testing it. Coverage is still measured and uploaded by
+       * CI; set your own floor here once you have a suite worth holding.
+       *
+       * If you do, note that `statements` and `branches` need slack the other
+       * two do not: the React Compiler emits cache-hit/cache-miss pairs, some
+       * unreachable from any test -- a rest-spread builds a fresh object every
+       * render, so its "unchanged" branch can never be taken.
        */
-      thresholds: { lines: 100, functions: 100, statements: 85, branches: 65 },
     },
     projects: [
       defineProject({
