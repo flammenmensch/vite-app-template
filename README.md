@@ -263,10 +263,12 @@ against a known digest the first time a machine downloads it — a cached copy i
 not re-checked, which is why the pin matters most on fresh CI runners. Change it
 with `corepack use pnpm@<version>`, never by hand.
 
-Dependabot watches three ecosystems: npm, the workflow actions (pinned to SHAs,
-so nothing else would ever advance them), and the Dockerfile's base image. A
-base image bump can legitimately change glyph rendering; the visual job failing
-on such a PR is the signal to re-record baselines, not a flake.
+Dependabot watches npm, the workflow actions (pinned to SHAs, so nothing else
+would ever advance them), and Docker images — but it is told to leave the
+Dockerfile's `node` image alone. That version is deliberately the same one as
+`.nvmrc`, and moving Node is a coordinated edit across `.nvmrc`, the Dockerfile
+and `engines.node`, followed by re-recording every visual baseline, so it stays
+a human decision.
 
 Security policy and how to report something: [SECURITY.md](SECURITY.md).
 

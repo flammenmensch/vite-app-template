@@ -38,13 +38,18 @@ updates:
           - minor
           - patch
 
-  # The Dockerfile's `FROM node:...` pins the environment every visual baseline
-  # was recorded in, so a bump here can legitimately change rendering. The
-  # visual job will fail the PR if it does; that failure is the signal to
-  # re-record baselines, not a flake.
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
     commit-message:
       prefix: chore
+    ignore:
+      # The Dockerfile's `FROM node:` is deliberately the exact version in
+      # .nvmrc, so the container and the host agree and `engines.node` holds
+      # inside as well as out. Bumping it here alone would break that and
+      # silently change the environment every visual baseline was recorded in.
+      # Moving Node is a coordinated edit -- .nvmrc, Dockerfile, engines -- plus
+      # re-recorded baselines, so it stays a human decision. The ecosystem is
+      # kept so any image added later is still watched.
+      - dependency-name: node
