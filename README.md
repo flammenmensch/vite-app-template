@@ -131,23 +131,44 @@ and whatever is behind it; `:focus-visible` uses it globally.
 
 The rest is one scale per concern:
 
-| scale         | values                   |
-| ------------- | ------------------------ |
-| `font`        | `body` `heading` `mono`  |
-| `fontSize`    | `sm` … `xxl`             |
-| `fontWeight`  | `normal` `medium` `bold` |
-| `lineHeight`  | `tight` `normal`         |
-| `space`       | `xs` … `xl`              |
-| `radii`       | `sm` `md` `full`         |
-| `borderWidth` | `thin` `thick`           |
-| `shadow`      | `sm` `md` `lg`           |
+| scale         | values                       |
+| ------------- | ---------------------------- |
+| `font`        | `body` `heading` `mono`      |
+| `fontSize`    | `sm` … `xxl`                 |
+| `fontWeight`  | `normal` `medium` `bold`     |
+| `lineHeight`  | `tight` `normal`             |
+| `space`       | `xs` … `xl`                  |
+| `radii`       | `sm` `md` `full`             |
+| `borderWidth` | `thin` `thick`               |
+| `shadow`      | `sm` `md` `lg`               |
+| `duration`    | `fast` `normal` `slow`       |
+| `easing`      | `standard` `entrance` `exit` |
 
 `shadow` is elevation rather than decoration — each step should read as further
 from the page than the last. Note it is a theme value, not a constant: a black
 shadow does nothing on a dark surface, so a second theme needs its own.
 
-Still deliberately absent: motion (`duration`, `easing`), `zIndex`, and
-breakpoints. Add them against the same shape when you need them.
+Motion is asymmetric on purpose: things arriving should decelerate into place
+(`entrance`) and things leaving should accelerate away (`exit`). One symmetric
+curve for both is what makes an interface feel sluggish on exit.
+
+`prefers-reduced-motion` is honoured once, centrally, by collapsing the duration
+tokens to `1ms`. Anything that animates through them follows automatically — no
+per-component media query, no `!important` blanket over the document. That is
+the argument for motion being tokens at all: a hardcoded `200ms` cannot be
+switched off from one place.
+
+That override is deliberately **not** in the `global` layer.
+`createGlobalTheme` writes its `:root` unlayered, and unlayered rules beat
+layered ones wherever they sit in the file — inside the layer it compiled
+cleanly, emitted exactly the CSS it should have, and was silently ignored by the
+browser.
+
+This is unrelated to `setup.visual.ts`, which freezes motion outright for
+screenshot determinism regardless of the viewer's preference.
+
+Still deliberately absent: `zIndex` and breakpoints. Add them against the same
+shape when you need them.
 
 Two things worth knowing before you extend it. Font stacks are system fonts, so
 no webfont load can race a screenshot; adding one means re-recording baselines.
