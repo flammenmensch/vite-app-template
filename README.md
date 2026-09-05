@@ -98,14 +98,45 @@ src/
       __screenshots__/            committed baselines
       index.ts                    barrel
   styles/                         reset + global theme
+  test/                           shared test setup and helpers
   utils/
-test/                             shared test setup and helpers
 ```
 
-Test helpers live in `test/` at the repo root rather than inside `src/`, and are
-imported as `#test/...` through the `imports` field in `package.json` (mirrored
-by `paths` in `tsconfig.app.json`, which TypeScript needs spelled out
-separately). Test _files_ stay next to the code they cover.
+Test helpers live in `src/test/` and are imported as `#test/...` through the
+`imports` field in `package.json` (mirrored by `paths` in `tsconfig.app.json`,
+which TypeScript needs spelled out separately). Test _files_ stay next to the
+code they cover.
+
+## Styling
+
+`src/styles/global.css.ts` defines a small theme contract. The values are
+placeholders — the shape is the part worth keeping.
+
+Colours come in **pairs**: anything used as a surface has a matching
+`Foreground` for text on it.
+
+| surface      | text on it         |
+| ------------ | ------------------ |
+| `background` | `foreground`       |
+| `surface`    | `foreground`       |
+| `accent`     | `accentForeground` |
+| `danger`     | `dangerForeground` |
+
+A component that only ever uses a pair cannot produce unreadable text when the
+palette is replaced, which is what breaks first when a second theme is added
+later. `muted` is secondary text on `background` or `surface` only — never on
+`accent` or `danger`. `focus` is its own slot rather than an alias of `accent`,
+because a focus ring has to stay visible against both the control it outlines
+and whatever is behind it; `:focus-visible` uses it globally.
+
+The rest — `font`, `fontSize`, `lineHeight`, `space`, `radii` — is deliberately
+sparse. Add `fontWeight`, `borderWidth`, `shadow` or motion tokens when you
+actually need them.
+
+Two things worth knowing before you extend it. Font stacks are system fonts, so
+no webfont load can race a screenshot; adding one means re-recording baselines.
+And CSS custom properties cannot appear in `@media` conditions, so breakpoints
+have to be plain TypeScript constants rather than theme tokens.
 
 ## Testing
 
