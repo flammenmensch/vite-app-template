@@ -91,6 +91,10 @@ try {
   delete pkg.scripts.postinstall
   delete pkg.scripts.init
 
+  // The guarded version exists only for scaffolds without a repository. From
+  // here on there is always a `.git`, and scripts/ is about to be deleted.
+  pkg.scripts.prepare = 'husky'
+
   await write('package.json', `${JSON.stringify(pkg, null, 2)}\n`)
 
   const html = await read('index.html')
@@ -125,13 +129,12 @@ try {
 
   installGitHooks()
 
-  // degit deletes this itself; it only survives on the "Use this template"
-  // path, where nothing runs degit's actions.
-  await rm(resolve(root, 'degit.json'), { force: true })
   await rm(resolve(root, 'scripts'), { recursive: true, force: true })
 
   console.log(`\nDone. "${name}" is ready.`)
-  console.log('Visual baselines still belong to the template — re-record them:')
+  console.log(
+    'Re-record visual baselines once you replace the example component:'
+  )
   console.log('  pnpm test:visual:update\n')
 } finally {
   rl.close()

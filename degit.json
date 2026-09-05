@@ -1,7 +1,0 @@
-[
-  {
-    "action": "remove",
-    "allowGlobs": true,
-    "files": ["src/**/__screenshots__"]
-  }
-]

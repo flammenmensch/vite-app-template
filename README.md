@@ -33,20 +33,16 @@ pnpm run init      # prompts for name, author, repo; rewrites metadata, then rem
 cannot run them for you: its actions are `clone`, `search_replace` and `remove`
 only, by design, since it copies untrusted repositories.
 
-What degit _can_ do is delete things, and `degit.json` uses that to drop this
-template's own visual baselines — screenshots of a `Header` your project is
-about to replace, recorded on one architecture. A scaffold therefore starts with
-no baselines, and the first `pnpm test:visual` fails with "No existing reference
-screenshot found" until you record your own with `pnpm test:visual:update`. That
-is deliberate: an inherited baseline is worse than an absent one.
+A scaffold keeps the `Header` component and its recorded baselines, so
+`pnpm test:visual` passes on a fresh checkout and you can see the whole visual
+workflow work before changing anything. Once you replace `Header` with your own
+components, record your own baselines with `pnpm test:visual:update`.
 
 `init` also initialises a git repository and installs the commit hooks. That has
-to happen here rather than during `pnpm install`, because husky's `prepare` step
-needs `.git` to already exist and `degit` gives you a directory without one — it
-exits quietly in that case, and nothing re-runs it afterwards, not even a later
-`git init`. Skipping `init` therefore leaves you with no lint-staged and no
-commitlint, and nothing to tell you. If you do skip it, run `git init` followed
-by `pnpm run prepare` yourself.
+to happen here rather than during `pnpm install`, because husky needs `.git` to
+already exist, and a `degit` scaffold has no repository yet. Skipping `init`
+therefore leaves you without lint-staged and commitlint — run `git init` and
+then `pnpm install` again to pick them up.
 
 `init` rewrites `package.json`, the `index.html` title, and this README. The
 visual baselines it leaves behind belong to the template's `Header`, so
