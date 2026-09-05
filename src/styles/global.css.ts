@@ -42,6 +42,11 @@ export const globalTheme = createGlobalTheme(':root', {
     xl: '1.5rem',
     xxl: '2rem',
   },
+  fontWeight: {
+    normal: '400',
+    medium: '500',
+    bold: '700',
+  },
   lineHeight: {
     tight: '1.25',
     normal: '1.5',
@@ -57,6 +62,25 @@ export const globalTheme = createGlobalTheme(':root', {
     sm: '0.25rem',
     md: '0.5rem',
     full: '9999px',
+  },
+  borderWidth: {
+    /** Hairlines. Pair with `color.border`. */
+    thin: '1px',
+    /** Emphasis: a selected control, an error outline. */
+    thick: '2px',
+  },
+  /**
+   * Elevation, not decoration -- each step should read as "further from the
+   * page" than the last. These are theme values rather than constants: a dark
+   * theme needs its own, since a black shadow does nothing on a dark surface.
+   */
+  shadow: {
+    /** Resting on the page: cards, table rows. */
+    sm: '0 1px 2px rgba(0, 0, 0, 0.06)',
+    /** Lifted above it: dropdowns, popovers. */
+    md: '0 4px 12px rgba(0, 0, 0, 0.08)',
+    /** Detached from it: dialogs, sheets. */
+    lg: '0 12px 32px rgba(0, 0, 0, 0.12)',
   },
 })
 
@@ -83,6 +107,7 @@ globalStyle('h1, h2, h3, h4, h5, h6', {
   '@layer': {
     [global]: {
       fontFamily: globalTheme.font.heading,
+      fontWeight: globalTheme.fontWeight.bold,
       lineHeight: globalTheme.lineHeight.tight,
     },
   },

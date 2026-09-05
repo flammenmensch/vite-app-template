@@ -129,9 +129,25 @@ later. `muted` is secondary text on `background` or `surface` only — never on
 because a focus ring has to stay visible against both the control it outlines
 and whatever is behind it; `:focus-visible` uses it globally.
 
-The rest — `font`, `fontSize`, `lineHeight`, `space`, `radii` — is deliberately
-sparse. Add `fontWeight`, `borderWidth`, `shadow` or motion tokens when you
-actually need them.
+The rest is one scale per concern:
+
+| scale         | values                   |
+| ------------- | ------------------------ |
+| `font`        | `body` `heading` `mono`  |
+| `fontSize`    | `sm` … `xxl`             |
+| `fontWeight`  | `normal` `medium` `bold` |
+| `lineHeight`  | `tight` `normal`         |
+| `space`       | `xs` … `xl`              |
+| `radii`       | `sm` `md` `full`         |
+| `borderWidth` | `thin` `thick`           |
+| `shadow`      | `sm` `md` `lg`           |
+
+`shadow` is elevation rather than decoration — each step should read as further
+from the page than the last. Note it is a theme value, not a constant: a black
+shadow does nothing on a dark surface, so a second theme needs its own.
+
+Still deliberately absent: motion (`duration`, `easing`), `zIndex`, and
+breakpoints. Add them against the same shape when you need them.
 
 Two things worth knowing before you extend it. Font stacks are system fonts, so
 no webfont load can race a screenshot; adding one means re-recording baselines.
