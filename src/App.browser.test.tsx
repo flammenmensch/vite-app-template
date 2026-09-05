@@ -10,8 +10,7 @@ test('mounts the application shell', async () => {
 })
 
 test('is stable across re-renders', async () => {
-  // Covers the React Compiler cache-hit path for the app root; see the
-  // equivalent test in Header.browser.test.tsx for why this matters.
+  // Covers the React Compiler cache-hit path for the app root.
   const screen = await render(<App />)
   await screen.rerender(<App />)
 

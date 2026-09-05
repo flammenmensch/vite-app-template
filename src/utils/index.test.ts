@@ -2,11 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import { cn } from './index'
 
-/**
- * `cn` is a re-export of clsx. These tests are not testing clsx -- they pin the
- * behaviour components rely on, so swapping the implementation later is a
- * visible decision rather than a silent regression.
- */
+// Pins the behaviour components rely on, so replacing clsx is a visible choice.
 describe('cn', () => {
   test('joins truthy class names', () => {
     expect(cn('a', 'b')).toBe('a b')

@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 /**
- * One-time setup for a project scaffolded from this template.
- *
- * A template repository copies files verbatim, so a fresh app starts out
- * claiming to be `@flammenmensch/vite-app-template`, authored by someone else,
- * pointing its bug reports at a repository the new owner cannot write to. This
- * rewrites that identity, replaces the README with one about the new project,
- * and then deletes itself so it cannot be run twice.
- *
- * It also installs the git hooks, which cannot happen during `pnpm install`
- * when the project was scaffolded with `degit` -- see `installGitHooks` below.
+ * One-time setup for a project scaffolded from this template: rewrites the
+ * template's identity, installs git hooks, then deletes itself.
  *
  *     pnpm run init
  */
@@ -33,19 +25,11 @@ const run = (command, args) =>
 /**
  * Install husky's git hooks.
  *
- * The `prepare` script normally does this during `pnpm install`, but husky
- * needs a `.git` directory to exist at that moment and exits 0 without one --
- * it has to, since it is also installed transitively, in CI, and in this
- * project's Docker image, none of which are git repositories.
- *
- * `degit` copies files without any git history, so the order ends up backwards:
- * install runs first, finds no repository, and quietly does nothing. Nothing
- * re-runs `prepare` afterwards, not even `git init`, so the hooks would stay
- * uninstalled permanently and lint-staged and commitlint would never fire.
- *
- * Running here closes that gap, because this is the one step that happens after
- * install. It is idempotent: projects created with GitHub's "Use this template"
- * already have a repository and working hooks, and re-running husky is a no-op.
+ * `prepare` normally does this during `pnpm install`, but husky needs `.git` to
+ * exist by then and exits 0 without it. `degit` scaffolds have no repository,
+ * and nothing re-runs `prepare` afterwards -- not even a later `git init` -- so
+ * hooks would stay uninstalled. This step runs after install, so it can fix the
+ * order. Idempotent: repositories from "Use this template" already have hooks.
  */
 const installGitHooks = () => {
   try {
@@ -56,9 +40,8 @@ const installGitHooks = () => {
     run(resolve(root, 'node_modules', '.bin', 'husky'), [])
     console.log('Installed git hooks.')
   } catch (error) {
-    // Never fail the whole setup over hooks -- the metadata rewrite above has
-    // already been written, and a second run is impossible once this script
-    // deletes itself.
+    // Never fail setup over hooks: the metadata rewrite is already written and
+    // this script is about to delete itself.
     console.warn(`\nCould not install git hooks: ${error.message}`)
     console.warn('Run `git init` and then `pnpm run prepare` to finish.\n')
   }
@@ -74,8 +57,6 @@ const ask = async (question, fallback) => {
 try {
   const name = await ask('Project name', basename(root))
   if (!NAME.test(name)) {
-    // Failing here is friendlier than writing a package.json that every
-    // subsequent pnpm command rejects.
     console.error(`\n"${name}" is not a valid npm package name.`)
     exit(1)
   }
@@ -103,8 +84,7 @@ try {
     delete pkg.homepage
   }
 
-  // The template ships its own keywords and its init script; neither belongs
-  // to the new project.
+  // Neither belongs to the new project.
   delete pkg.keywords
   delete pkg.scripts.init
 

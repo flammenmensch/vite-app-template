@@ -181,16 +181,14 @@ import { visualTest } from '#test/visual'
 import * as stories from './Header.stories'
 
 visualTest('default', stories.Default)
-visualTest('with custom class', stories.WithCustomClass)
 ```
 
-`visualTest(name, story, options?)` renders the story, waits for webfonts and
+`visualTest(name, story, options?)` renders the story, waits for fonts and
 layout to settle, and captures the component's container rather than the whole
 viewport.
 
-The theme in `src/styles/global.css.ts` uses system font stacks, so there is no
-webfont load for a screenshot to race. If you add webfonts, re-record every
-baseline once they are in place. The name becomes the baseline filename, so reordering tests never
+The theme uses system font stacks, so there is no webfont load for a screenshot
+to race. If you add webfonts, re-record every baseline once they are in place. The name becomes the baseline filename, so reordering tests never
 renames files. `visualTest.skip` and `visualTest.only` work as on Vitest's
 `test`.
 

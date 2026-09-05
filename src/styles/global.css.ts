@@ -3,19 +3,9 @@ import { createGlobalTheme, globalStyle, layer } from '@vanilla-extract/css'
 const global = layer('global')
 
 /**
- * A theme contract: slots, not a design.
- *
- * The values are deliberately generic so a project scaffolded from this
- * template replaces them without restructuring anything. The shape is the part
- * worth keeping -- components reference `globalTheme.space.md`, and swapping
- * what `md` means is then a one-line change rather than a search across the
- * codebase.
- *
- * Font stacks are system fonts on purpose. A webfont has to load, which means
- * there is a moment where it has not, and a screenshot taken in that moment
- * records the fallback instead. Nothing to load means nothing to fall back
- * from. Add webfonts when the design calls for them, and re-record baselines
- * when you do.
+ * A theme contract: generic slots meant to be replaced, where the shape is the
+ * part worth keeping. Font stacks are system fonts so there is no webfont load
+ * for a screenshot to race; re-record baselines if you add one.
  */
 export const globalTheme = createGlobalTheme(':root', {
   color: {
