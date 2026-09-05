@@ -34,8 +34,7 @@ globalStyle('body', {
   '@layer': {
     [reset]: {
       lineHeight: 1.5,
-      // @ts-expect-error Prefixed property
-      webkitFontSmoothing: 'antialiased',
+      WebkitFontSmoothing: 'antialiased',
     },
   },
 })
