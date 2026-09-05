@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 # A project-local pnpm store, if one gets created here.
 .pnpm-store
+# Personal working notes, e.g. TODO.local.md.
+*.local.md
 dist
 dist-ssr
 *.local
