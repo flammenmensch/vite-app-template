@@ -83,10 +83,16 @@ visual regression.
 | `pnpm lint` / `pnpm format` | oxlint / oxfmt                         |
 | `pnpm test`                 | Watch unit + browser                   |
 | `pnpm test:run`             | Single run, unit + browser             |
+| `pnpm test:unit`            | Watch unit only                        |
+| `pnpm test:browser`         | Watch browser only                     |
 | `pnpm test:coverage`        | Unit + browser, with a coverage report |
 | `pnpm test:visual`          | Visual regression, in Docker           |
 | `pnpm test:visual:update`   | Re-record baselines, in Docker         |
-| `pnpm test:all`             | Everything CI runs                     |
+
+`pnpm` appends arguments to a script rather than replacing them, so
+`pnpm test --project=unit` runs `--project=unit --project=browser --project=unit`
+and quietly executes both. Use `pnpm test:unit`, or `pnpm exec vitest` directly
+when you want full control of the flags.
 
 ## Project structure
 
@@ -227,7 +233,12 @@ happened to record it.
 ```sh
 pnpm test:visual          # compare against committed baselines
 pnpm test:visual:update   # re-record after an intended change
-pnpm test:visual:shell    # interactive shell in the container
+```
+
+To poke around inside the container:
+
+```sh
+docker compose run --rm --build --entrypoint bash visual
 ```
 
 The container uses **your host's architecture** by default, and there is **one

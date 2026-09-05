@@ -49,9 +49,7 @@
     "test:browser": "vitest --project=browser",
     "test:coverage": "vitest run --project=unit --project=browser --coverage",
     "test:visual": "docker compose run --rm --build visual",
-    "test:visual:update": "docker compose run --rm --build visual pnpm exec vitest run --project=visual --update",
-    "test:visual:shell": "docker compose run --rm --build --entrypoint bash visual",
-    "test:all": "pnpm test:run && pnpm test:visual"
+    "test:visual:update": "docker compose run --rm --build visual pnpm exec vitest run --project=visual --update"
   },
   "dependencies": {
     "@vanilla-extract/css": "^1.21.2",
