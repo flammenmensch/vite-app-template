@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { readFile, writeFile, rm } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
-import { stdin, stdout, exit } from 'node:process'
+import { env, stdin, stdout, exit } from 'node:process'
 import { createInterface } from 'node:readline/promises'
 
 const root = resolve(import.meta.dirname, '..')
@@ -21,6 +21,66 @@ const NAME = /^(?:@[a-z0-9-*~][a-z0-9-*._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/
 
 const run = (command, args) =>
   execFileSync(command, args, { cwd: root, stdio: 'pipe' })
+
+/** Run a command for its output; '' when it is missing, fails, or says nothing. */
+const capture = (command, args) => {
+  try {
+    return execFileSync(command, args, {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim()
+  } catch {
+    return ''
+  }
+}
+
+/** `npm config get` prints the string "undefined" for anything unset. */
+const npmConfig = (key) => {
+  const value = capture('npm', ['config', 'get', key])
+  return value === 'undefined' || value === 'null' ? '' : value
+}
+
+/**
+ * Guess the author the way `npm init` does, preferring the npm settings that
+ * exist for exactly this purpose and falling back to git's identity, which far
+ * more people have actually set. `EMAIL` is git's own last resort, so honour it.
+ */
+const defaultAuthor = () => {
+  const name =
+    npmConfig('init-author-name') || capture('git', ['config', 'user.name'])
+  const email =
+    npmConfig('init-author-email') ||
+    capture('git', ['config', 'user.email']) ||
+    env.EMAIL ||
+    ''
+
+  if (!name) return email
+  return email ? `${name} <${email}>` : name
+}
+
+/**
+ * Take the repository from git's origin, as `npm init` does. A degit scaffold
+ * has no repository yet, so this is empty there and filled in on the
+ * "Use this template" and `gh repo create` paths, which clone a real remote.
+ */
+const defaultRepository = () => {
+  const origin = capture('git', ['remote', 'get-url', 'origin'])
+  const ssh = origin.match(/^(?:ssh:\/\/)?git@([^:/]+)[:/](.+?)(?:\.git)?$/)
+
+  if (ssh) return `https://${ssh[1]}/${ssh[2]}`
+  return origin.replace(/\.git$/, '')
+}
+
+/** Directory names need not be valid package names: `My App` -> `my-app`. */
+const toPackageName = (value) => {
+  const cleaned = value
+    .toLowerCase()
+    .replace(/[^a-z0-9\-._~]+/g, '-')
+    .replace(/^[-._]+|[-._]+$/g, '')
+
+  return cleaned || 'app'
+}
 
 /**
  * Install husky's git hooks.
@@ -47,23 +107,76 @@ const installGitHooks = () => {
   }
 }
 
-const rl = createInterface({ input: stdin, output: stdout })
+/**
+ * Collect piped answers before asking anything.
+ *
+ * `rl.question()` only claims the line that arrives after it is called, and a
+ * pipe hands over its whole buffer in one chunk -- so every answer past the
+ * first lands with no question pending and is dropped. The next question then
+ * waits for input that can never arrive, stdin ends, and node exits 13 with
+ * "Detected unsettled top-level await". Reading the pipe up front removes the
+ * race, and makes `init` scriptable rather than merely non-crashing.
+ */
+const readPipedAnswers = async () => {
+  stdin.setEncoding('utf8')
+  let input = ''
+  for await (const chunk of stdin) input += chunk
+  const lines = input.split('\n')
+  if (lines.at(-1) === '') lines.pop()
+  return lines
+}
+
+const interactive = Boolean(stdin.isTTY)
+const piped = interactive ? [] : await readPipedAnswers()
+
+// Refuse rather than assume: `init` rewrites package.json and deletes scripts/,
+// which should not happen because something ran it with no input attached.
+if (!interactive && piped.length === 0) {
+  console.error('`init` needs a terminal, or the answers on stdin:\n')
+  console.error(
+    "  printf 'my-app\\nA description\\nAuthor\\n\\n' | pnpm run init\n"
+  )
+  exit(1)
+}
+
+const rl = interactive
+  ? createInterface({ input: stdin, output: stdout })
+  : undefined
+
+/** Set while a question is outstanding, so a closed input fails loudly. */
+let awaitingAnswer = false
+
+rl?.once('close', () => {
+  if (!awaitingAnswer) return
+  console.error('\nCancelled: no answer given.')
+  exit(1)
+})
 
 const ask = async (question, fallback) => {
-  const answer = (await rl.question(`${question} (${fallback}) `)).trim()
+  const prompt = `${question} (${fallback}) `
+
+  if (!interactive) {
+    const answer = (piped.shift() ?? '').trim() || fallback
+    console.log(prompt + answer)
+    return answer
+  }
+
+  awaitingAnswer = true
+  const answer = (await rl.question(prompt)).trim()
+  awaitingAnswer = false
   return answer || fallback
 }
 
 try {
-  const name = await ask('Project name', basename(root))
+  const name = await ask('Project name', toPackageName(basename(root)))
   if (!NAME.test(name)) {
     console.error(`\n"${name}" is not a valid npm package name.`)
     exit(1)
   }
 
   const description = await ask('Description', '')
-  const author = await ask('Author', '')
-  const repository = await ask('Repository URL', '')
+  const author = await ask('Author', defaultAuthor())
+  const repository = await ask('Repository URL', defaultRepository())
 
   const pkg = JSON.parse(await read('package.json'))
 
@@ -137,5 +250,5 @@ try {
   )
   console.log('  pnpm test:visual:update\n')
 } finally {
-  rl.close()
+  rl?.close()
 }

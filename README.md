@@ -33,6 +33,12 @@ pnpm run init      # prompts for name, author, repo; rewrites metadata, then rem
 cannot run them for you: its actions are `clone`, `search_replace` and `remove`
 only, by design, since it copies untrusted repositories.
 
+`init` fills its prompts in from the machine the way `npm init` does — the name
+from the directory, the author from npm's `init-author-*` settings or `git
+config user.name`/`user.email`, and the repository from git's `origin` when
+there is one. Press enter to accept a default. It also takes answers on stdin,
+in prompt order, for scripted setup.
+
 A scaffold keeps the `Header` component and its recorded baselines, so
 `pnpm test:visual` passes on a fresh checkout and you can see the whole visual
 workflow work before changing anything. Once you replace `Header` with your own
