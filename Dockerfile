@@ -13,7 +13,7 @@
 # Debian 12 is a Playwright-supported platform, and since CI runs this exact
 # container, matching upstream's base is not required. What matters is that
 # every run uses the same one.
-FROM node:24.20.0-bookworm
+FROM node:26.8.1-bookworm
 
 # `npm_config_store_dir` is how pnpm picks up npm-style config from the
 # environment. Setting it here rather than running `pnpm config set --global`
