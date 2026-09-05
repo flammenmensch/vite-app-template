@@ -8,8 +8,12 @@ mean the same thing on every machine.
 - **vanilla-extract** for typed, zero-runtime styling
 - **Vitest 5** across three projects: unit, browser, and visual
 - **Ladle** for component development
-- **oxlint + oxfmt** for linting and formatting
+- **oxlint + oxfmt** for linting and formatting, with `jsx-a11y` enabled
 - **Husky + commitlint** for conventional commits
+
+Accessibility rules run as warnings, so they surface in your editor and in the
+pre-commit output without failing anyone's build over a debatable rule. Use
+`oxlint --deny-warnings` in `pnpm lint` if you want CI to enforce them.
 
 ## Using this template
 

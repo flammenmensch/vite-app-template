@@ -22,6 +22,9 @@
     "jsx": "react-jsx",
 
     /* Linting */
+    /* Explicit: TypeScript 7 defaults this on, and the template should not
+       quietly depend on a default that a future release could change. */
+    "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
